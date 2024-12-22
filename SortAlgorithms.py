@@ -116,45 +116,47 @@ class SortAlgorithms:
             low = 0
             high = len(self.array) - 1
 
-        if low < high:
+        while low < high:
             pi = self.partition(low, high)
+
+            # Process the smaller subarray first
             if pi - low < high - pi:
-                self.quickSort(low, pi - 1)
-                self.quickSort(pi + 1, high)
+                self.improvedQuickSort(low, pi - 1)
+                low = pi + 1  # Tail recursion optimization
             else:
-                self.quickSort(pi + 1, high)
-                self.quickSort(low, pi - 1)
+                self.improvedQuickSort(pi + 1, high)
+                high = pi - 1  # Tail recursion optimization
 
     def radixSort(self):
-        max_num = max(self.array)
+        """Standard Radix Sort implementation."""
+        max_num = max(self.array)  # Find the maximum number to determine the number of digits
 
-        exp = 1
+        exp = 1  # Start with the least significant digit
         while max_num // exp > 0:
-            self.countSort(exp)
-            exp *= 10
-
-        
-    def improvedRadixSort(self):
-        max_num = max(self.array)
-
-        exp = 1
-        while max_num // exp > 0:
-            self.countSort(exp)
-            exp *= 10
+            self.countSort(exp)  # Perform counting sort for the current digit
+            exp *= 10  # Move to the next significant digit
 
 
-    def countSort(self, exp):
+    def countSort(self, exp, track_sorted=False):
+        """
+        Counting Sort used by Radix Sort.
+        :param exp: The current digit's place value (1 for units, 10 for tens, etc.).
+        :param track_sorted: If True, returns whether the array is already sorted.
+        """
         n = len(self.array)
-        output = [0] * n
-        count = [0] * 10
+        output = [0] * n  # Output array to store sorted numbers
+        count = [0] * 10  # Count array for digits (0-9)
 
+        # Count occurrences of each digit in the current place value
         for i in range(n):
             index = self.array[i] // exp
             count[index % 10] += 1
 
+        # Update count[i] so it contains the position of the next element in output[]
         for i in range(1, 10):
             count[i] += count[i - 1]
 
+        # Build the output array
         i = n - 1
         while i >= 0:
             index = self.array[i] // exp
@@ -162,8 +164,20 @@ class SortAlgorithms:
             count[index % 10] -= 1
             i -= 1
 
+        # Check if the array is already sorted (optional, for improvedRadixSort)
+        already_sorted = True
+        for i in range(1, n):
+            if output[i] < output[i - 1]:
+                already_sorted = False
+                break
+
+        # Copy the sorted numbers back to the original array
         for i in range(n):
             self.array[i] = output[i]
+
+        if track_sorted:
+            return already_sorted
+
 
     def resetArray(self):
         """Reset array to the original state."""
